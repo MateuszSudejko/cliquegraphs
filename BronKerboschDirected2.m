@@ -1,6 +1,8 @@
 function cliques = BronKerboschDirected2(matrix)
     cliques = {};
-
+    tmp = matrix;
+    matrix = zeros(size(matrix));
+    matrix(tmp == 1 & tmp.'==1) = 1;
     function findCliques(R, P, X)
         if isempty(P) && isempty(X)
             cliques{end+1} = R;

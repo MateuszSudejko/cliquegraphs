@@ -3,14 +3,14 @@ function result = greedyRandom(matrix)
     R = [];
     P = 1:size(matrix,1);
     while ~isempty(P)
-        R = []; % Reset R to empty for the next iteration
+        
         N = P;
         while ~isempty(N)
             v_index = randi(length(P)); % Randomly select an index from P
             v = P(v_index); % Retrieve the value at the selected index
             neighbors = [];
             for i=1:size(matrix,1) 
-                if matrix(v,i)==1
+                if matrix(v,i)==1 && matrix(i,v)==1
                     neighbors(end + 1) = i;
                 end
             end
@@ -26,7 +26,9 @@ function result = greedyRandom(matrix)
        
         % Remove elements in R from P
         P = setdiff(P, R);
+
+        R = []; % Reset R to empty for the next iteration
     end
     
-    result = R;
+    result = max;
 end
