@@ -3,11 +3,10 @@ function result = greedyRandom(matrix)
     R = [];
     P = 1:size(matrix,1);
     while ~isempty(P)
-        
         N = P;
         while ~isempty(N)
-            v_index = randi(length(P)); % Randomly select an index from P
-            v = P(v_index); % Retrieve the value at the selected index
+            v_index = randi(length(N)); % Randomly select an index from P
+            v = N(v_index); % Retrieve the value at the selected index
             neighbors = [];
             for i=1:size(matrix,1) 
                 if matrix(v,i)==1 && matrix(i,v)==1

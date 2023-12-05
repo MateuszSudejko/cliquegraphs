@@ -42,8 +42,14 @@ for j = 1:numel(graphs)
 
     cliques = BronKerboschDirected2(graphMatrix);
 
-    sizes = cellfun(@numel, cliques);
+    maxSize = 0;
+    for j = 1:numel(cliques)
+        currentSize = numel(cliques{j});
+        if currentSize > maxSize
+            maxSize = currentSize;
+        end
+    end
 
-    disp(max(sizes));
+    disp(maxSize);
 end
 
