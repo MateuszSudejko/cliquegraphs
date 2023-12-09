@@ -12,17 +12,17 @@ graphs = cell(1, numGraphs); % Store adjacency matrices for each graph
 graphCounter = 0;
 
 while ~feof(fileID)
-    line = fgetl(fileID);
-    if isempty(line) % Empty line indicates the end of the current graph
-        graphCounter = graphCounter + 1;
-    else
+    numVertices = str2double(fgetl(fileID)); % Read the number of vertices for the current graph
+    graphMatrix = zeros(numVertices); % Initialize adjacency matrix for the current graph
+
+    for i = 1:numVertices
+        line = fgetl(fileID);
         currentRow = str2double(strsplit(line));
-        if isempty(graphs{graphCounter + 1})
-            graphs{graphCounter + 1} = currentRow;
-        else
-            graphs{graphCounter + 1} = [graphs{graphCounter + 1}; currentRow];
-        end
+        graphMatrix(i, :) = currentRow;
     end
+
+    graphs{graphCounter + 1} = graphMatrix;
+    graphCounter = graphCounter + 1;
 end
 
 fclose(fileID);

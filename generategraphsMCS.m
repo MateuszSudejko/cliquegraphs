@@ -1,7 +1,7 @@
-N = 10; % Number of graphs to generate
+N = 5; % Number of graphs to generate
 probability = 0.5; % probability of an edge between two vertices
-lowerBoundVert = 100;
-higherBoundVert = 200; % boundaries for number of generated vertices in graphs
+lowerBoundVert = 50;
+higherBoundVert = 60; % boundaries for number of generated vertices in graphs
 
 T1=zeros(1,N);
 for i = 1:N
@@ -32,18 +32,18 @@ for i = 1:N
     plot(G1, 'Layout', 'force');
     title(sprintf('Random Graph %d 1', i));
 
-    graphMatrix=adjacency(G1);
+    graphMatrix1=adjacency(G1);
     
     G2 = digraph(edges2(:, 1), edges2(:, 2), [], nodes2);
     figure;
     plot(G2, 'Layout', 'force');
     title(sprintf('Random Graph %d 2', i));
 
-    graphMatrix=adjacency(G1);
+    graphMatrix2=adjacency(G1);
 
     tic
     
-    disp(MCS(G1,G2));
+    disp(MCS(2,{graphMatrix1, graphMatrix2}));
 
     T1(i)=toc;
 end
