@@ -5,51 +5,49 @@ if fileID == -1
     error('File not found or unable to open the file.');
 end
 
-% Read lines from the file
-lines = textscan(fileID, '%s', 'Delimiter', '\n');
-fclose(fileID);
+% Read the number of graphs from the first line
+numGraphs = str2double(fgetl(fileID)); % Read the first line as the number of graphs
 
-numLines = length(lines{1});
-graphs = {}; % Store adjacency matrices for each graph
-currentGraph = [];
-for i = 1:numLines
-    line = lines{1}{i};
+graphs = cell(1, numGraphs); % Store adjacency matrices for each graph
+graphCounter = 0;
+
+while ~feof(fileID)
+    line = fgetl(fileID);
     if isempty(line) % Empty line indicates the end of the current graph
-        if ~isempty(currentGraph)
-            graphs{end+1} = currentGraph;
-            currentGraph = [];
-        end
+        graphCounter = graphCounter + 1;
     else
         currentRow = str2double(strsplit(line));
-        currentGraph = [currentGraph; currentRow];
+        if isempty(graphs{graphCounter + 1})
+            graphs{graphCounter + 1} = currentRow;
+        else
+            graphs{graphCounter + 1} = [graphs{graphCounter + 1}; currentRow];
+        end
     end
 end
 
-% Process the last graph if it exists
-if ~isempty(currentGraph)
-    graphs{end+1} = currentGraph;
-end
+fclose(fileID);
 
 % Create directed graphs for each matrix
 for j = 1:numel(graphs)
     graphMatrix = graphs{j};
-    G = digraph(graphMatrix);
-    
-    % Display the graph
-    figure;
-    plot(G, 'Layout', 'force');
-    title(sprintf('Directed Graph %d from Matrix', j));
+    if ~isempty(graphMatrix)
+        G = digraph(graphMatrix);
+        
+        % Display the graph
+        figure;
+        plot(G, 'Layout', 'force');
+        title(sprintf('Directed Graph %d from Matrix', j));
 
-    cliques = BronKerboschDirected2(graphMatrix);
+        cliques = BronKerboschDirected2(graphMatrix);
 
-    maxSize = 0;
-    for j = 1:numel(cliques)
-        currentSize = numel(cliques{j});
-        if currentSize > maxSize
-            maxSize = currentSize;
+        maxSize = 0;
+        for k = 1:numel(cliques)
+            currentSize = numel(cliques{k});
+            if currentSize > maxSize
+                maxSize = currentSize;
+            end
         end
+
+        disp(maxSize);
     end
-
-    disp(maxSize);
 end
-
