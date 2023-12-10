@@ -10,7 +10,7 @@ function output = MCS(number_of_graphs,graphs)
         all_cliques = BronKerboschDirected2(modular);
         max_size = 0;
         for i = 1:length(all_cliques)
-            if size(all_cliques{i}) > max_size
+            if length(all_cliques{i}) > max_size
                 max_size = length(all_cliques{i});
                 idx = i;
             end
@@ -22,7 +22,7 @@ function output = MCS(number_of_graphs,graphs)
         end
         output = zeros(size(graph1,1));
         for i = 1:size(graph1,1)
-            for j = 1:size(graph1)
+            for j = 1:size(graph1, 1)
                 if ismember(i, index_mapping_graph1) && ismember(j, index_mapping_graph1)
                     output(i,j) = graph1(i,j);
                 end
