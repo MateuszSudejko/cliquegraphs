@@ -51,3 +51,8 @@ for j = 1:numel(graphs)
         disp(maxSize);
     end
 end
+figure;
+maximumCommonSubgraph = MCS(graphCounter, graphs);
+G = digraph(maximumCommonSubgraph);
+plot(G, 'Layout', 'force');
+title("Maximum Common Subgraph");
