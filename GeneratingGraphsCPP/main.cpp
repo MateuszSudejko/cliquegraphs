@@ -205,9 +205,5 @@ int main() {
     }*/
     cout << endl;
 
-    cout<<"Finish?";
-    int n;
-    cin>>n;
-
     return 0;
 }
