@@ -9,38 +9,44 @@
 #include <tuple>
 #include <string>
 #include <utility>
+#include <map>
 
 using namespace std;
 
-void displayGraph(const vector<vector<int>>& graph) {
-    int numVertices = graph.size();
+pair<vector<vector<int>>, vector<pair<int, int>>> modularProduct(vector<vector<int>> matrix1, vector<vector<int>> matrix2) {
+    int nextVertex = 1;
+    map<pair<int, int>, int> association;
+    vector<pair<int, int>> edges;
+    vector<pair<int, int>> indexMapping;
 
-    cout << "Adjacency Matrix:" << std::endl;
-    for (int i = 0; i < numVertices; ++i) {
-        for (int j = 0; j < numVertices; ++j) {
-            cout << graph[i][j] << " ";
-        }
-        cout << endl;
-    }
-}
-
-vector<vector<int>> modular_product(const vector<vector<int>>& graph1, const vector<vector<int>>& graph2) {
-    int size = graph1.size();
-    vector<vector<int>> result(size, vector<int>(size, 0));
-
-    for (int i = 0; i < size; ++i) {
-        for (int j = 0; j < size; ++j) {
-            for (int k = 0; k < size; ++k) {
-                // If there is an edge between i and k in graph1 and between j and k in graph2, add an edge between i and j in the result
-                if (graph1[i][k] && graph2[j][k]) {
-                    result[i][j] = 1;
-                    break; // Break once an edge is found
+    for (int v1 = 0; v1 < matrix1.size(); v1++) {
+        for (int v2 = 0; v2 < matrix2.size(); v2++) {
+            for (int w1 = 0; w1 < matrix1.size(); w1++) {
+                for (int w2 = 0; w2 < matrix2.size(); w2++) {
+                    if (v1 != w1 && v2 != w2 && matrix1[v1][w1] == matrix2[v2][w2] && matrix1[w1][v1] == matrix2[w2][v2]) {
+                        if (association.find({v1, v2}) == association.end()) {
+                            association[{v1, v2}] = nextVertex;
+                            indexMapping.push_back({v1, v2});
+                            nextVertex++;
+                        }
+                        if (association.find({w1, w2}) == association.end()) {
+                            association[{w1, w2}] = nextVertex;
+                            indexMapping.push_back({w1, w2});
+                            nextVertex++;
+                        }
+                        edges.push_back({association[{v1, v2}], association[{w1, w2}]});
+                    }
                 }
             }
         }
     }
 
-    return result;
+    vector<vector<int>> adjacencyMatrix(nextVertex, vector<int>(nextVertex, 0));
+    for (auto edge : edges) {
+        adjacencyMatrix[edge.first][edge.second] = 1;
+    }
+
+    return {adjacencyMatrix, indexMapping};
 }
 
 void findCliques(vector<vector<int>>& matrix, vector<int>& R, vector<int>& P, vector<int>& X, vector<vector<int>>& cliques) {
@@ -95,74 +101,88 @@ vector<vector<int>> bronKerboschDirected2(vector<vector<int>>& matrix) {
     return cliques;
 }
 
-vector<vector<int>> MCS(int number_of_graphs, vector<vector<vector<int>>>& graphs) {
+vector<int> BronKerboschDirected(const vector<vector<int>>& graph) {
+    vector<vector<int>> matrix = graph;
+    vector<vector<int>> cliques = bronKerboschDirected2(matrix);
+    vector<int> maxClique;
+
+    size_t maxIndex = 0;
+    size_t maxSize = 0;
+
+    for (size_t i = 0; i < cliques.size(); ++i) {
+        if (cliques[i].size() > maxSize) {
+            maxIndex = i;
+            maxSize = cliques[i].size();
+        }
+    }
+
+    // Placeholder - pick the first found clique as the maximum clique
+    if (!cliques.empty()) {
+        maxClique = cliques[maxIndex];
+    }
+
+    return maxClique;
+}
+
+vector<vector<int>> submatrix(vector<vector<int>> matrix, vector<bool> keepRow, vector<bool> keepCol) {
     vector<vector<int>> output;
-
-    if (number_of_graphs == 0 || number_of_graphs == 1) {
-        return output;
-    }
-
-    vector<vector<int>> graph1 = graphs[0];
-    vector<vector<int>> graph2 = graphs[1];
-
-    for (int k = 2; k < number_of_graphs; ++k) {
-        auto modular = modular_product(graph1, graph2);
-        auto all_cliques = bronKerboschDirected2(modular);
-
-        int max_size = 0;
-        int idx = 0;
-        for (int i = 0; i < all_cliques.size(); ++i) {
-            if (all_cliques[i].size() > max_size) {
-                max_size = all_cliques[i].size();
-                idx = i;
-            }
-        }
-
-        auto max_clique = all_cliques[idx];
-        vector<int> index_mapping_graph1;
-        for (int i = 0; i < max_clique.size(); ++i) {
-            index_mapping_graph1.push_back(modular[max_clique[i]][0]);
-        }
-
-        output = vector<vector<int>>(graph1.size(), vector<int>(graph1.size(), 0));
-        for (int i = 0; i < graph1.size(); ++i) {
-            for (int j = 0; j < graph1.size(); ++j) {
-                if (find(index_mapping_graph1.begin(), index_mapping_graph1.end(), i) != index_mapping_graph1.end() &&
-                    find(index_mapping_graph1.begin(), index_mapping_graph1.end(), j) != index_mapping_graph1.end()) {
-                    output[i][j] = graph1[i][j];
+    for (int i = 0; i < matrix.size(); i++) {
+        if (keepRow[i]) {
+            vector<int> row;
+            for (int j = 0; j < matrix[i].size(); j++) {
+                if (keepCol[j]) {
+                    row.push_back(matrix[i][j]);
                 }
             }
-        }
-
-        vector<bool> isolatedVertices(graph1.size(), false);
-        for (int i = 0; i < graph1.size(); ++i) {
-            if (accumulate(output[i].begin(), output[i].end(), 0) == 0 &&
-                accumulate(output.begin(), output.end(), 0, [i](int sum, const vector<int>& row) { return sum + row[i]; }) == 0) {
-                isolatedVertices[i] = true;
-            }
-        }
-
-        vector<vector<int>> temp;
-        for (int i = 0; i < output.size(); ++i) {
-            if (!isolatedVertices[i]) {
-                vector<int> row;
-                for (int j = 0; j < output.size(); ++j) {
-                    if (!isolatedVertices[j]) {
-                        row.push_back(output[i][j]);
-                    }
-                }
-                temp.push_back(row);
-            }
-        }
-
-        output = temp;
-        graph1 = output;
-        if (k + 1 < number_of_graphs) {
-            graph2 = graphs[k + 1];
+            output.push_back(row);
         }
     }
+    return output;
+}
+
+vector<vector<int>> maximumCommonSubgraph(vector<vector<int>> graph1, vector<vector<int>> graph2) {
+    auto [modular, indexMapping] = modularProduct(graph1, graph2);
+    auto maxClique = BronKerboschDirected(modular);
+
+    vector<int> indexMappingGraph1;
+    for (int i = 0; i < maxClique.size(); i++) {
+        indexMappingGraph1.push_back(indexMapping[maxClique[i]].first);
+    }
+
+    vector<vector<int>> output(graph1.size(), vector<int>(graph1.size(), 0));
+    for (int i = 0; i < graph1.size(); i++) {
+        for (int j = 0; j < graph1.size(); j++) {
+            if (find(indexMappingGraph1.begin(), indexMappingGraph1.end(), i) != indexMappingGraph1.end() &&
+                find(indexMappingGraph1.begin(), indexMappingGraph1.end(), j) != indexMappingGraph1.end()) {
+                output[i][j] = graph1[i][j];
+            }
+        }
+    }
+
+    vector<bool> isolatedVertices(graph1.size(), true);
+    for (int i = 0; i < graph1.size(); i++) {
+        for (int j = 0; j < graph1.size(); j++) {
+            if (output[i][j] != 0 || output[j][i] != 0) {
+                isolatedVertices[i] = false;
+                break;
+            }
+        }
+    }
+    //output = submatrix(output, isolatedVertices, isolatedVertices);
 
     return output;
+}
+
+void displayGraph(const vector<vector<int>>& graph) {
+    int numVertices = graph.size();
+
+    cout << "Adjacency Matrix:" << std::endl;
+    for (int i = 0; i < numVertices; ++i) {
+        for (int j = 0; j < numVertices; ++j) {
+            cout << graph[i][j] << " ";
+        }
+        cout << endl;
+    }
 }
 
 double calculateMean(vector<double> arr, int size) {
@@ -179,9 +199,9 @@ int main() {
     int lowerBoundVert = 40;
     int higherBoundVert = 50; // Boundaries for number of generated vertices in graphs
 
-    cout<<"How many graphs do you want to simulate?";
+    cout<<"How many tests for pairs of graphs do you want to simulate?";
     cin>>N;
-    cout<<"How many edges do you want to have in the graphs? (give number between 0-1)";
+    cout<<"How much probability should there be for an edge to be between any two vertices? (give number between 0-1)";
     cin>>probability;
     cout<<"How many vertices do you want to have at least in a graph?";
     cin>>lowerBoundVert;
@@ -240,7 +260,7 @@ int main() {
         graphs.push_back(graphMatrix2);
 
         auto start1 = chrono::steady_clock::now();
-        vector<vector<int>> mcs = MCS(2, graphs);
+        vector<vector<int>> mcs = maximumCommonSubgraph(graphs[0], graphs[1]);
         auto end1 = chrono::steady_clock::now();
         T1[i] = chrono::duration<double>(end1 - start1).count();
 
