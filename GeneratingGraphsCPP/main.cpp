@@ -122,13 +122,13 @@ int main() {
 
     cout<<"How many graphs do you want to simulate?";
     cin>>N;
-    cout<<"How many edges do you want to have in the graphs? (give number between 0-1)";
+    cout<<"How much probability should there be for the edge to be between any two vertices? (give number between 0-1)";
     cin>>probability;
     cout<<"How many vertices do you want to have at least in a graph?";
     cin>>lowerBoundVert;
     cout<<"How many vertices do you want to have at most in a graph?";
     cin>>higherBoundVert;
-    cout<<"How many reps do you want to have for greedyRandom function?";
+    cout<<"How many repetitions do you want to have for greedyRandom function?";
     cin>>reps;
 
     vector<double> T1(N);
