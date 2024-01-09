@@ -3,8 +3,6 @@
 #include <algorithm>
 #include <fstream>
 #include <sstream>
-#include <vector>
-#include <algorithm>
 #include <cstdlib>
 #include <ctime>
 #include <unordered_set>
@@ -13,8 +11,45 @@
 #include <tuple>
 #include <string>
 #include <utility>
+#include <map>
 
 using namespace std;
+
+pair<vector<vector<int>>, vector<pair<int, int>>> modularProduct(vector<vector<int>> matrix1, vector<vector<int>> matrix2) {
+    int nextVertex = 1;
+    map<pair<int, int>, int> association;
+    vector<pair<int, int>> edges;
+    vector<pair<int, int>> indexMapping;
+
+    for (int v1 = 0; v1 < matrix1.size(); v1++) {
+        for (int v2 = 0; v2 < matrix2.size(); v2++) {
+            for (int w1 = 0; w1 < matrix1.size(); w1++) {
+                for (int w2 = 0; w2 < matrix2.size(); w2++) {
+                    if (v1 != w1 && v2 != w2 && matrix1[v1][w1] == matrix2[v2][w2] && matrix1[w1][v1] == matrix2[w2][v2]) {
+                        if (association.find({v1, v2}) == association.end()) {
+                            association[{v1, v2}] = nextVertex;
+                            indexMapping.push_back({v1, v2});
+                            nextVertex++;
+                        }
+                        if (association.find({w1, w2}) == association.end()) {
+                            association[{w1, w2}] = nextVertex;
+                            indexMapping.push_back({w1, w2});
+                            nextVertex++;
+                        }
+                        edges.push_back({association[{v1, v2}], association[{w1, w2}]});
+                    }
+                }
+            }
+        }
+    }
+
+    vector<vector<int>> adjacencyMatrix(nextVertex, vector<int>(nextVertex, 0));
+    for (auto edge : edges) {
+        adjacencyMatrix[edge.first][edge.second] = 1;
+    }
+
+    return {adjacencyMatrix, indexMapping};
+}
 
 void findCliques(vector<vector<int>>& matrix, vector<int>& R, vector<int>& P, vector<int>& X, vector<vector<int>>& cliques) {
     if (P.empty() && X.empty()) {
@@ -68,6 +103,90 @@ vector<vector<int>> bronKerboschDirected2(vector<vector<int>>& matrix) {
     return cliques;
 }
 
+vector<int> BronKerboschDirected(const vector<vector<int>>& graph) {
+    vector<vector<int>> matrix = graph;
+    vector<vector<int>> cliques = bronKerboschDirected2(matrix);
+    vector<int> maxClique;
+
+    size_t maxIndex = 0;
+    size_t maxSize = 0;
+
+    for (size_t i = 0; i < cliques.size(); ++i) {
+        if (cliques[i].size() > maxSize) {
+            maxIndex = i;
+            maxSize = cliques[i].size();
+        }
+    }
+
+    // Placeholder - pick the first found clique as the maximum clique
+    if (!cliques.empty()) {
+        maxClique = cliques[maxIndex];
+    }
+
+    return maxClique;
+}
+
+vector<vector<int>> submatrix(vector<vector<int>> matrix, vector<bool> keepRow, vector<bool> keepCol) {
+    vector<vector<int>> output;
+    for (int i = 0; i < matrix.size(); i++) {
+        if (keepRow[i]) {
+            vector<int> row;
+            for (int j = 0; j < matrix[i].size(); j++) {
+                if (keepCol[j]) {
+                    row.push_back(matrix[i][j]);
+                }
+            }
+            output.push_back(row);
+        }
+    }
+    return output;
+}
+
+vector<vector<int>> maximumCommonSubgraph(vector<vector<int>> graph1, vector<vector<int>> graph2) {
+    auto [modular, indexMapping] = modularProduct(graph1, graph2);
+    auto maxClique = BronKerboschDirected(modular);
+
+    vector<int> indexMappingGraph1;
+    for (int i = 0; i < maxClique.size(); i++) {
+        indexMappingGraph1.push_back(indexMapping[maxClique[i]].first);
+    }
+
+    vector<vector<int>> output(graph1.size(), vector<int>(graph1.size(), 0));
+    for (int i = 0; i < graph1.size(); i++) {
+        for (int j = 0; j < graph1.size(); j++) {
+            if (find(indexMappingGraph1.begin(), indexMappingGraph1.end(), i) != indexMappingGraph1.end() &&
+                find(indexMappingGraph1.begin(), indexMappingGraph1.end(), j) != indexMappingGraph1.end()) {
+                output[i][j] = graph1[i][j];
+            }
+        }
+    }
+
+    vector<bool> isolatedVertices(graph1.size(), true);
+    for (int i = 0; i < graph1.size(); i++) {
+        for (int j = 0; j < graph1.size(); j++) {
+            if (output[i][j] != 0 || output[j][i] != 0) {
+                isolatedVertices[i] = false;
+                break;
+            }
+        }
+    }
+    //output = submatrix(output, isolatedVertices, isolatedVertices);
+
+    return output;
+}
+
+void displayGraph(const vector<vector<int>>& graph) {
+    int numVertices = graph.size();
+
+    cout << "Adjacency Matrix:" << endl;
+    for (int i = 0; i < numVertices; ++i) {
+        for (int j = 0; j < numVertices; ++j) {
+            cout << graph[i][j] << " ";
+        }
+        cout << endl;
+    }
+}
+
 vector<vector<vector<int>>> readGraphFile(const string& filename) {
     ifstream file(filename);
     if (!file.is_open()) {
@@ -119,6 +238,19 @@ int main() {
             cout << "Max clique size for graph " << j + 1 << ": " << maxSize << endl;
         }
     }
+
+    vector<vector<int>> mcs = maximumCommonSubgraph(graphs[0],graphs[1]);
+
+    int s=2;
+
+    while(s<graphs.size()){
+        mcs = maximumCommonSubgraph(mcs,graphs[s]);
+        s++;
+    }
+
+    cout<<"Maximum Common Subgraph adjacency matrix: "<<endl;
+
+    displayGraph(mcs);
 
     return 0;
 }
