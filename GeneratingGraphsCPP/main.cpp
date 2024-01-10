@@ -9,6 +9,7 @@
 #include <tuple>
 #include <string>
 #include <utility>
+#include <numeric>
 
 using namespace std;
 
@@ -204,6 +205,10 @@ int main() {
         cout << e << " ";
     }*/
     cout << endl;
+
+    cout<<"Finish?";
+    int n;
+    cin>>n;
 
     return 0;
 }
